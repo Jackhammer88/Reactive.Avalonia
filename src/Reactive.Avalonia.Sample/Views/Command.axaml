@@ -1,0 +1,23 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Reactive.Avalonia.Sample.ViewModels"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="Reactive.Avalonia.Sample.Views.Command"
+             x:DataType="vm:CommandViewModel">
+
+    <StackPanel Spacing="12" HorizontalAlignment="Center" VerticalAlignment="Center">
+        <NumericUpDown x:Name="NumericUpDown" Minimum="1" Maximum="60" Value="5" Text="Seconds" Increment="1" FormatString="0" />
+
+        <StackPanel Orientation="Horizontal" Spacing="8">
+            <Button Content="Run Job"
+                    Command="{Binding RunJobCommand}"
+                    CommandParameter="{Binding ElementName=NumericUpDown, Path=Value}" />
+            <Button Content="Cancel Job"
+                    Command="{Binding CancelJobCommand}" />
+        </StackPanel>
+
+        <TextBlock Text="{Binding JobStatus}" HorizontalAlignment="Center" />
+    </StackPanel>
+</UserControl>

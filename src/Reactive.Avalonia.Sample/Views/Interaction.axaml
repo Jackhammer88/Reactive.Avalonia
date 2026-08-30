@@ -1,0 +1,20 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Reactive.Avalonia.Sample.ViewModels"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="Reactive.Avalonia.Sample.Views.Interaction"
+             x:DataType="vm:InteractionViewModel">
+
+    <Grid ColumnDefinitions="*,Auto" VerticalAlignment="Center" RowDefinitions="Auto" ColumnSpacing="8" Margin="4 8">
+        <TextBox Grid.Column="0"
+                 IsReadOnly="True"
+                 Text="{Binding SelectedFolder}"
+                 HorizontalAlignment="Stretch" />
+
+        <Button Grid.Column="1"
+                Content="Select folder"
+                Command="{Binding SelectFolderCommand}" />
+    </Grid>
+</UserControl>
