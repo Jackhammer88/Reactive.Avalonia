@@ -1,0 +1,92 @@
+name: Deploy sample to GitHub Pages
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+    inputs:
+      aot:
+        description: Compile the WebAssembly ahead of time. On by default; turn it off for a quick deploy.
+        type: boolean
+        default: true
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Never let two deployments race; queue them instead of cancelling, so the last push always wins.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build WebAssembly
+    runs-on: ubuntu-latest
+    # Ahead-of-time compilation is slow; the default 6 hours is plenty, but fail sooner if it hangs.
+    timeout-minutes: 60
+    # The sample is a solution of its own, with its own global.json pinning a stable SDK. Publishing from the
+    # repository root would pick a different one, and the browser head builds differently under it.
+    defaults:
+      run:
+        working-directory: src/Reactive.Avalonia.Sample
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Install the wasm-tools workload
+        run: dotnet workload install wasm-tools
+
+      # Decided in shell rather than in an expression: on a push `inputs.aot` is null, and GitHub coerces null
+      # and false to the same value, so `inputs.aot == false` would wrongly disable AOT for every push.
+      - name: Decide whether to compile ahead of time
+        id: aot
+        working-directory: .
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.aot }}" = "false" ]; then
+            echo "flag=" >> "$GITHUB_OUTPUT"
+            echo "Ahead-of-time compilation disabled for this run."
+          else
+            echo "flag=-p:RunAOTCompilation=true" >> "$GITHUB_OUTPUT"
+            echo "Ahead-of-time compilation enabled."
+          fi
+
+      # The flag is only ever passed as true: setting RunAOTCompilation=false explicitly would also turn off
+      # native linking and drop SkiaSharp from the bundle.
+      - name: Publish
+        run: >
+          dotnet publish Reactive.Avalonia.Sample.Browser/Reactive.Avalonia.Sample.Browser.csproj
+          -c Release -o ../../artifacts/wasm
+          ${{ steps.aot.outputs.flag }}
+
+      # Pages runs Jekyll by default, and Jekyll drops directories starting with an underscore — which would
+      # take _framework with it and leave a blank page.
+      - name: Disable Jekyll
+        working-directory: .
+        run: touch artifacts/wasm/wwwroot/.nojekyll
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: artifacts/wasm/wwwroot
+
+  deploy:
+    name: Deploy
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

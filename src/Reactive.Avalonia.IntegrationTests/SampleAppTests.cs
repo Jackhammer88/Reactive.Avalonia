@@ -99,16 +99,16 @@ public class SampleAppTests
     }
 
     [AvaloniaTest]
-    public void TheInteractionTabAsksTheViewForAFolder()
+    public void TheInteractionTabAsksTheViewForAFile()
     {
         using var viewModel = new InteractionViewModel();
-        using var handler = viewModel.OpenFolderInteraction.RegisterHandler(
-            static context => context.SetOutput("/tmp/chosen"));
+        using var handler = viewModel.OpenFileInteraction.RegisterHandler(
+            static context => context.SetOutput("/tmp/chosen.txt"));
 
-        viewModel.SelectFolderCommand.Execute().Subscribe();
+        viewModel.SelectFileCommand.Execute().Subscribe();
         Dispatcher.UIThread.RunJobs();
 
-        Assert.That(viewModel.SelectedFolder, Is.EqualTo("/tmp/chosen"));
+        Assert.That(viewModel.SelectedFile, Is.EqualTo("/tmp/chosen.txt"));
     }
 
     [AvaloniaTest]
@@ -121,9 +121,9 @@ public class SampleAppTests
         window.Show();
         Dispatcher.UIThread.RunJobs();
 
-        // The view's own handler answers with null because the headless storage provider has no folders.
+        // The view's own handler answers with null because the headless storage provider has no files.
         string? answer = "unset";
-        viewModel.OpenFolderInteraction.Handle(Unit.Default).Subscribe(value => answer = value);
+        viewModel.OpenFileInteraction.Handle(Unit.Default).Subscribe(value => answer = value);
         Dispatcher.UIThread.RunJobs();
         Assert.That(answer, Is.Null);
 
@@ -131,7 +131,7 @@ public class SampleAppTests
         Dispatcher.UIThread.RunJobs();
 
         Exception? caught = null;
-        viewModel.OpenFolderInteraction.Handle(Unit.Default).Subscribe(static _ => { }, ex => caught = ex);
+        viewModel.OpenFileInteraction.Handle(Unit.Default).Subscribe(static _ => { }, ex => caught = ex);
 
         Assert.That(
             caught,

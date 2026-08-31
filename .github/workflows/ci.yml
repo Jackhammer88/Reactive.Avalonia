@@ -1,0 +1,133 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+
+jobs:
+  test:
+    name: Build and test
+    runs-on: ubuntu-latest
+    # Running from src/ means src/global.json chooses the SDK, exactly as it does locally.
+    defaults:
+      run:
+        working-directory: src
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore
+        run: dotnet restore Reactive.Avalonia.slnx
+
+      - name: Build
+        run: dotnet build Reactive.Avalonia.slnx -c Release --no-restore -warnaserror
+
+      - name: Test
+        run: >
+          dotnet test Reactive.Avalonia.slnx -c Release --no-build
+          --logger "trx;LogFileName=results.trx"
+          --results-directory ../artifacts/test-results
+
+      - name: Pack
+        run: dotnet pack Reactive.Avalonia/Reactive.Avalonia.csproj -c Release --no-build -o ../artifacts/packages
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: artifacts/test-results
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: packages
+          path: artifacts/packages
+
+  aot:
+    name: NativeAOT publish
+    runs-on: ubuntu-latest
+    # The sample is a solution of its own, with its own global.json pinning a stable SDK.
+    defaults:
+      run:
+        working-directory: src/Reactive.Avalonia.Sample
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      # The whole point of the library is that trimming does not break it, so any ILLink warning fails the build.
+      - name: Publish the desktop sample with NativeAOT
+        run: >
+          dotnet publish Reactive.Avalonia.Sample.Desktop/Reactive.Avalonia.Sample.Desktop.csproj
+          -c Release -r linux-x64
+          -p:PublishAot=true
+          -p:TrimmerSingleWarn=false
+          -p:ILLinkTreatWarningsAsErrors=true
+          -o ../../artifacts/aot
+
+      - name: Check the binary starts
+        working-directory: .
+        run: |
+          # There is no display on CI, so Avalonia cannot open a window and the app is expected to fail there.
+          # A trimming problem looks different, so only those patterns fail the job.
+          set +e
+          output=$(timeout 20 ./artifacts/aot/Reactive.Avalonia.Sample.Desktop 2>&1)
+          echo "$output"
+          if echo "$output" | grep -qE "MissingMethodException|MissingMemberException|TypeInitializationException|TypeLoadException"; then
+            echo "::error::The AOT binary hit a trimming-related failure."
+            exit 1
+          fi
+
+  wasm:
+    name: WebAssembly build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/Reactive.Avalonia.Sample
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Install the wasm-tools workload
+        run: dotnet workload install wasm-tools
+
+      # Deliberately without RunAOTCompilation: this gate exists to catch a broken browser head on the pull
+      # request, and ahead-of-time compilation would add roughly twenty minutes to every one. The Pages
+      # workflow does compile ahead of time, so an AOT-only failure surfaces on the next push to master.
+      - name: Publish the browser sample
+        run: >
+          dotnet publish Reactive.Avalonia.Sample.Browser/Reactive.Avalonia.Sample.Browser.csproj
+          -c Release -o ../../artifacts/wasm
+
+      # Without libSkiaSharp linked in, the app publishes happily and then renders nothing in the browser.
+      - name: Check the native runtime was linked in
+        working-directory: .
+        run: |
+          # The WebAssembly SDK fingerprints asset names, so match on the pattern rather than a fixed name.
+          native=$(find artifacts/wasm/wwwroot/_framework -maxdepth 1 -name 'dotnet.native*.wasm' | head -n1)
+          if [ -z "$native" ]; then
+            echo "::error::No dotnet.native*.wasm was produced — the native runtime was not linked in at all."
+            ls artifacts/wasm/wwwroot/_framework
+            exit 1
+          fi
+          size=$(stat -c%s "$native")
+          echo "dotnet.native.wasm is $size bytes"
+          if [ "$size" -lt 5000000 ]; then
+            echo "::error::dotnet.native.wasm looks too small — SkiaSharp and HarfBuzz were probably not linked in."
+            exit 1
+          fi

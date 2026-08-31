@@ -1,5 +1,8 @@
 # Reactive.Avalonia
 
+[![CI](https://github.com/Jackhammer88/Reactive.Avalonia/actions/workflows/ci.yml/badge.svg)](https://github.com/Jackhammer88/Reactive.Avalonia/actions/workflows/ci.yml)
+[![NuGet](https://img.shields.io/nuget/v/Reactive.Avalonia.svg)](https://www.nuget.org/packages/Reactive.Avalonia)
+
 Reactive MVVM for Avalonia: observable-driven properties, commands, validation and view activation — on
 .NET 10, with nothing that trimming or NativeAOT can break.
 
@@ -176,7 +179,14 @@ dotnet build src/Reactive.Avalonia.slnx
 dotnet test src/Reactive.Avalonia.slnx
 ```
 
-`src/Reactive.Avalonia.Sample` is a runnable application covering each feature on its own tab.
+`src/Reactive.Avalonia.Sample` is a runnable application covering each feature on its own tab, with desktop,
+browser and Android heads. It is also published as an ahead-of-time compiled WebAssembly build on every push to `master`:
+**[live demo](https://jackhammer88.github.io/Reactive.Avalonia/)**.
+
+```
+cd src/Reactive.Avalonia.Sample
+dotnet run --project Reactive.Avalonia.Sample.Desktop
+```
 
 ## Licence
 

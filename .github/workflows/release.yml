@@ -1,0 +1,89 @@
+name: Release
+
+# Publishing is driven entirely by the tag: v0.1.0 publishes 0.1.0, v0.2.0-preview.1 publishes a prerelease.
+# Nothing is published from an ordinary push.
+on:
+  push:
+    tags: ['v*']
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+  # Only tags whose commit is on this branch are allowed to publish.
+  RELEASE_BRANCH: master
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Publish to NuGet
+    runs-on: ubuntu-latest
+    steps:
+      # Full history so the tagged commit can be checked against the release branch.
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Read the version from the tag
+        id: version
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+            echo "::error::Tag '$GITHUB_REF_NAME' is not a version tag. Expected something like v0.1.0 or v0.1.0-preview.1."
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          if [[ "$version" == *-* ]]; then
+            echo "prerelease=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "prerelease=false" >> "$GITHUB_OUTPUT"
+          fi
+          echo "Publishing $version"
+
+      # A tag on a side branch would otherwise publish code that never passed review.
+      - name: Check the tag is on ${{ env.RELEASE_BRANCH }}
+        run: |
+          if ! git branch --remotes --contains "$GITHUB_SHA" | grep -qx "  origin/$RELEASE_BRANCH"; then
+            echo "::error::Tag '$GITHUB_REF_NAME' points at a commit that is not on origin/$RELEASE_BRANCH."
+            git branch --remotes --contains "$GITHUB_SHA"
+            exit 1
+          fi
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Build
+        working-directory: src
+        run: dotnet build Reactive.Avalonia.slnx -c Release -warnaserror
+
+      # A release that fails its own tests is worse than a late release.
+      - name: Test
+        working-directory: src
+        run: dotnet test Reactive.Avalonia.slnx -c Release --no-build
+
+      - name: Pack
+        working-directory: src
+        run: >
+          dotnet pack Reactive.Avalonia/Reactive.Avalonia.csproj -c Release --no-build
+          -p:Version=${{ steps.version.outputs.version }}
+          -p:ContinuousIntegrationBuild=true
+          -o ../artifacts/packages
+
+      # The matching .snupkg next to the .nupkg is pushed along with it.
+      - name: Push to NuGet
+        run: >
+          dotnet nuget push "artifacts/packages/*.nupkg"
+          --api-key "${{ secrets.NUGET_API_KEY }}"
+          --source https://api.nuget.org/v3/index.json
+          --skip-duplicate
+
+      - name: Create the GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ steps.version.outputs.version }}
+          prerelease: ${{ steps.version.outputs.prerelease == 'true' }}
+          generate_release_notes: true
+          files: artifacts/packages/*
