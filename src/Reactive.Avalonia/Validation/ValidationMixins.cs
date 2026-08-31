@@ -110,6 +110,62 @@ public static class ValidationMixins
     }
 
     /// <summary>
+    /// Adds a rule for one property whose outcome — validity and message together — comes from a sequence.
+    /// </summary>
+    /// <typeparam name="TViewModel">The view model type.</typeparam>
+    /// <typeparam name="TProperty">The property type.</typeparam>
+    /// <param name="viewModel">The view model to add the rule to.</param>
+    /// <param name="property">A lambda naming the property the error is reported against.</param>
+    /// <param name="validationStates">Produces the rule's outcome, including the message to show.</param>
+    /// <returns>A handle to the rule.</returns>
+    /// <remarks>
+    /// Use this when the message depends on why the value failed, rather than being one fixed string. There is
+    /// no message parameter because each <see cref="ValidationState"/> already carries its own.
+    /// </remarks>
+    /// <example>
+    /// <code language="csharp">
+    /// var password = this.WhenAnyValue(
+    ///     x => x.SetupMode,
+    ///     x => x.NewPassword,
+    ///     (mode, value) => mode != SetupMode.New
+    ///         ? ValidationState.Valid
+    ///         : new ValidationState(policy.IsMet(value), policy.Explain(value)));
+    ///
+    /// this.ValidationRule(x => x.NewPassword, password);
+    /// </code>
+    /// </example>
+    public static ValidationHelper ValidationRule<TViewModel, TProperty>(
+        this TViewModel viewModel,
+        Expression<Func<TViewModel, TProperty>> property,
+        IObservable<ValidationState> validationStates)
+        where TViewModel : class, IValidatableViewModel
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        ArgumentNullException.ThrowIfNull(validationStates);
+
+        var propertyName = PropertyChain.SingleName(property, nameof(property));
+        return Register(viewModel, validationStates, [propertyName]);
+    }
+
+    /// <summary>
+    /// Adds a rule that applies to the view model as a whole, whose outcome and message come from a sequence.
+    /// </summary>
+    /// <typeparam name="TViewModel">The view model type.</typeparam>
+    /// <param name="viewModel">The view model to add the rule to.</param>
+    /// <param name="validationStates">Produces the rule's outcome, including the message to show.</param>
+    /// <returns>A handle to the rule.</returns>
+    public static ValidationHelper ValidationRule<TViewModel>(
+        this TViewModel viewModel,
+        IObservable<ValidationState> validationStates)
+        where TViewModel : class, IValidatableViewModel
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        ArgumentNullException.ThrowIfNull(validationStates);
+
+        return Register(viewModel, validationStates, []);
+    }
+
+    /// <summary>
     /// Adds a rule that applies to the view model as a whole rather than to a single property.
     /// </summary>
     /// <typeparam name="TViewModel">The view model type.</typeparam>

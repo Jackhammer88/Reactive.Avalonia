@@ -1,5 +1,8 @@
 # Reactive.Avalonia
 
+[![CI](https://github.com/Jackhammer88/Reactive.Avalonia/actions/workflows/ci.yml/badge.svg)](https://github.com/Jackhammer88/Reactive.Avalonia/actions/workflows/ci.yml)
+[![NuGet](https://img.shields.io/nuget/v/Reactive.Avalonia.svg)](https://www.nuget.org/packages/Reactive.Avalonia)
+
 Reactive MVVM for Avalonia: observable-driven properties, commands, validation and view activation — on
 .NET 10, with nothing that trimming or NativeAOT can break.
 
@@ -99,6 +102,20 @@ public sealed class SignUpViewModel : ReactiveValidationObject
 }
 ```
 
+When the message depends on *why* the value failed, produce the whole outcome from a sequence instead of
+pairing a boolean with one fixed string:
+
+```csharp
+var password = this.WhenAnyValue(
+    x => x.SetupMode,
+    x => x.NewPassword,
+    (mode, value) => mode != SetupMode.New
+        ? ValidationState.Valid
+        : new ValidationState(policy.IsMet(value), policy.Explain(value)));
+
+this.ValidationRule(x => x.NewPassword, password);
+```
+
 ### Views and activation
 
 ```csharp
@@ -142,6 +159,27 @@ this.WhenActivated(disposables =>
               .DisposeWith(disposables));
 ```
 
+## Using it without a window
+
+There is no builder to run and nothing to register — the library has no service locator, so a view model works
+the moment you construct it. The one thing that assumes a UI is the scheduler, which defaults to the Avalonia
+dispatcher. In a console program, an integration harness or a background service, nobody pumps that dispatcher,
+so point it at the calling thread instead:
+
+```csharp
+public static async Task Main()
+{
+    RxSchedulers.UseCurrentThread();
+
+    var viewModel = new ImportViewModel();
+    await viewModel.BrowseFileCommand.Execute();
+}
+```
+
+Skipping this does not fail cleanly: awaiting a command hangs, and only sometimes, depending on which thread the
+result arrives on. Avalonia's own headless test host does have a dispatcher, so there use `UseReactive()` on the
+`AppBuilder` as usual.
+
 ## Trimming and NativeAOT
 
 The library is marked `IsTrimmable` and `IsAotCompatible`, and the sample publishes with zero ILLink warnings
@@ -176,7 +214,14 @@ dotnet build src/Reactive.Avalonia.slnx
 dotnet test src/Reactive.Avalonia.slnx
 ```
 
-`src/Reactive.Avalonia.Sample` is a runnable application covering each feature on its own tab.
+`src/Reactive.Avalonia.Sample` is a runnable application covering each feature on its own tab, with desktop,
+browser and Android heads. It is also published as an ahead-of-time compiled WebAssembly build on every push to `master`:
+**[live demo](https://jackhammer88.github.io/Reactive.Avalonia/)**.
+
+```
+cd src/Reactive.Avalonia.Sample
+dotnet run --project Reactive.Avalonia.Sample.Desktop
+```
 
 ## Licence
 

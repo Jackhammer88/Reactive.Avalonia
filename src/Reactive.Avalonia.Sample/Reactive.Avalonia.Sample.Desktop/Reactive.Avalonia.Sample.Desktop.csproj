@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <OutputType>WinExe</OutputType>
         <!--If you are willing to use platform-specific APIs, use conditional compilation.
@@ -10,6 +10,21 @@
     <PropertyGroup>
         <ApplicationManifest>app.manifest</ApplicationManifest>
     </PropertyGroup>
+
+    <PropertyGroup Label="Trimming / NativeAOT">
+        <!-- Analyzers run on every build, so trim-hostile code in the sample is caught before publishing. -->
+        <IsAotCompatible>true</IsAotCompatible>
+        <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
+        <EnableAotAnalyzer>true</EnableAotAnalyzer>
+        <EnableSingleFileAnalyzer>true</EnableSingleFileAnalyzer>
+    </PropertyGroup>
+
+    <!-- Trimming needs a RuntimeIdentifier, so it only kicks in for `dotnet publish -r <rid>`. -->
+    <PropertyGroup Condition="'$(RuntimeIdentifier)' != ''">
+        <PublishTrimmed>true</PublishTrimmed>
+        <TrimMode>full</TrimMode>
+    </PropertyGroup>
+
 
     <ItemGroup>
         <PackageReference Include="Avalonia.Desktop"/>

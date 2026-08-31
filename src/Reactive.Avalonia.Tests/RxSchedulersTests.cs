@@ -1,3 +1,5 @@
+using System.Reactive.Threading.Tasks;
+
 namespace Reactive.Avalonia.Tests;
 
 /// <summary>
@@ -77,6 +79,60 @@ public class RxSchedulersTests
                 Assert.That(RxSchedulers.MainThreadScheduler, Is.SameAs(ImmediateScheduler.Instance));
                 Assert.That(RxSchedulers.TaskpoolScheduler, Is.SameAs(CurrentThreadScheduler.Instance));
             });
+        }
+    }
+
+    [Test]
+    public void UseCurrentThreadPointsAwayFromTheDispatcher()
+    {
+        var previousMain = RxSchedulers.MainThreadScheduler;
+        var previousTaskpool = RxSchedulers.TaskpoolScheduler;
+
+        try
+        {
+            RxSchedulers.UseCurrentThread();
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(RxSchedulers.MainThreadScheduler, Is.SameAs(CurrentThreadScheduler.Instance));
+                Assert.That(RxSchedulers.TaskpoolScheduler, Is.SameAs(TaskPoolScheduler.Default));
+            });
+        }
+        finally
+        {
+            RxSchedulers.MainThreadScheduler = previousMain;
+            RxSchedulers.TaskpoolScheduler = previousTaskpool;
+        }
+    }
+
+    [Test]
+    public async Task UseCurrentThreadLetsACommandBeAwaitedWithNoDispatcher()
+    {
+        // This is the failure it exists to prevent: with the dispatcher default and nothing pumping it, the
+        // await below never returns.
+        var previousMain = RxSchedulers.MainThreadScheduler;
+        var previousTaskpool = RxSchedulers.TaskpoolScheduler;
+
+        try
+        {
+            RxSchedulers.UseCurrentThread();
+
+            using var command = ReactiveCommand.CreateFromTask(static async () =>
+            {
+                await Task.Yield();
+                return 42;
+            });
+
+            var execution = command.Execute().FirstAsync().ToTask();
+            var finished = await Task.WhenAny(execution, Task.Delay(TimeSpan.FromSeconds(10)));
+
+            Assert.That(finished, Is.SameAs(execution), "The command never delivered its result.");
+            Assert.That(await execution, Is.EqualTo(42));
+        }
+        finally
+        {
+            RxSchedulers.MainThreadScheduler = previousMain;
+            RxSchedulers.TaskpoolScheduler = previousTaskpool;
         }
     }
 

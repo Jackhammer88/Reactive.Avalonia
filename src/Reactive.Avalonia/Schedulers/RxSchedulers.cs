@@ -59,6 +59,44 @@ public static class RxSchedulers
     }
 
     /// <summary>
+    /// Points the schedulers at the calling thread instead of the Avalonia dispatcher, for a process that has
+    /// no UI.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Call this once at the start of a console program, an integration harness or a background service that
+    /// uses view models without ever showing them. Without it, anything scheduled onto
+    /// <see cref="MainThreadScheduler"/> is posted to a dispatcher that nobody pumps, so awaiting a command
+    /// hangs — sometimes, depending on which thread the value arrives on, which is worse than always.
+    /// </para>
+    /// <para>
+    /// This is the whole of the setup. There is no builder to run and no services to register: the library has
+    /// no service locator, so the schedulers are the only thing that depends on there being a UI.
+    /// </para>
+    /// <para>
+    /// Do not call this from an Avalonia application — use <c>UseReactive()</c> on the
+    /// <c>AppBuilder</c> instead, which is also what Avalonia's own headless test host needs, since that does
+    /// have a dispatcher.
+    /// </para>
+    /// </remarks>
+    /// <example>
+    /// <code language="csharp">
+    /// public static async Task Main()
+    /// {
+    ///     RxSchedulers.UseCurrentThread();
+    ///
+    ///     var viewModel = new ImportViewModel();
+    ///     await viewModel.BrowseFileCommand.Execute();
+    /// }
+    /// </code>
+    /// </example>
+    public static void UseCurrentThread()
+    {
+        MainThreadScheduler = CurrentThreadScheduler.Instance;
+        TaskpoolScheduler = TaskPoolScheduler.Default;
+    }
+
+    /// <summary>
     /// Swaps the schedulers for the duration of a scope, then puts them back.
     /// </summary>
     /// <param name="mainThreadScheduler">The scheduler to use as <see cref="MainThreadScheduler"/>.</param>

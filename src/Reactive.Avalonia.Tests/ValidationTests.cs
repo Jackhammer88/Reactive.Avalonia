@@ -128,6 +128,65 @@ public class ValidationTests : ReactiveTestBase
     }
 
     [Test]
+    public void ARuleCanTakeItsOutcomeAndMessageFromASequence()
+    {
+        using var viewModel = new PolicyViewModel();
+
+        Assert.That(viewModel.HasErrors, Is.False, "An empty password is not checked against the policy yet.");
+
+        viewModel.Password = "short";
+        Assert.That(
+            Errors(viewModel, nameof(PolicyViewModel.Password)),
+            Is.EqualTo(new[] { "5 characters is not enough." }),
+            "The message comes from the state, so it can describe why this particular value failed.");
+
+        viewModel.Password = "short!";
+        Assert.That(
+            Errors(viewModel, nameof(PolicyViewModel.Password)),
+            Is.EqualTo(new[] { "6 characters is not enough." }));
+
+        viewModel.Password = "long enough";
+        Assert.That(viewModel.HasErrors, Is.False);
+    }
+
+    [Test]
+    public void ASequenceBackedRuleFollowsEveryPropertyItDependsOn()
+    {
+        using var viewModel = new PolicyViewModel();
+        viewModel.Password = "short";
+        Assert.That(viewModel.HasErrors, Is.True);
+
+        // The rule only applies in one mode, and switching mode has to re-evaluate it.
+        viewModel.Mode = PolicyViewModel.SetupMode.Existing;
+
+        Assert.That(viewModel.HasErrors, Is.False);
+    }
+
+    [Test]
+    public void AModelWideRuleCanTakeItsMessageFromASequence()
+    {
+        var states = new BehaviorSubject<ValidationState>(new ValidationState(false, "Not ready."));
+        using var viewModel = new SequenceOnlyViewModel(states);
+
+        Assert.That(Errors(viewModel, null), Is.EqualTo(new[] { "Not ready." }));
+
+        states.OnNext(ValidationState.Valid);
+        Assert.That(viewModel.HasErrors, Is.False);
+    }
+
+    [Test]
+    public void ValidationStateAcceptsASingleMessage()
+    {
+        var state = new ValidationState(false, "Nope.");
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(state.IsValid, Is.False);
+            Assert.That(state.Messages, Is.EqualTo(new[] { "Nope." }));
+        });
+    }
+
+    [Test]
     public void IsValidDrivesACommandsCanExecute()
     {
         using var viewModel = new PersonViewModel();
@@ -256,6 +315,55 @@ public class ValidationTests : ReactiveTestBase
             get => _confirmation;
             set => this.RaiseAndSetIfChanged(ref _confirmation, value);
         }
+    }
+
+    private sealed class PolicyViewModel : ReactiveValidationObject
+    {
+        private SetupMode _mode = SetupMode.New;
+        private string _password = string.Empty;
+
+        public PolicyViewModel()
+        {
+            var policy = this.WhenAnyValue(
+                x => x.Mode,
+                x => x.Password,
+                static (mode, password) =>
+                {
+                    if (mode != SetupMode.New || string.IsNullOrWhiteSpace(password))
+                    {
+                        return ValidationState.Valid;
+                    }
+
+                    return password.Length >= 8
+                        ? ValidationState.Valid
+                        : new ValidationState(false, $"{password.Length} characters is not enough.");
+                });
+
+            this.ValidationRule(x => x.Password, policy);
+        }
+
+        public enum SetupMode
+        {
+            New,
+            Existing,
+        }
+
+        public SetupMode Mode
+        {
+            get => _mode;
+            set => this.RaiseAndSetIfChanged(ref _mode, value);
+        }
+
+        public string Password
+        {
+            get => _password;
+            set => this.RaiseAndSetIfChanged(ref _password, value);
+        }
+    }
+
+    private sealed class SequenceOnlyViewModel : ReactiveValidationObject
+    {
+        public SequenceOnlyViewModel(IObservable<ValidationState> states) => this.ValidationRule(states);
     }
 
     private sealed class ModelWideViewModel : ReactiveValidationObject

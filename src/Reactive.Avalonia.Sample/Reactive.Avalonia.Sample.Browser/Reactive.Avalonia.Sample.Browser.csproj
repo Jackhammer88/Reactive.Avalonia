@@ -1,9 +1,24 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.WebAssembly">
+<Project Sdk="Microsoft.NET.Sdk.WebAssembly">
     <PropertyGroup>
         <TargetFramework>net10.0-browser</TargetFramework>
         <OutputType>Exe</OutputType>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+
+    <PropertyGroup Label="Trimming / NativeAOT">
+        <!-- Analyzers run on every build, so trim-hostile code in the sample is caught before publishing. -->
+        <IsAotCompatible>true</IsAotCompatible>
+        <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
+        <EnableAotAnalyzer>true</EnableAotAnalyzer>
+        <EnableSingleFileAnalyzer>true</EnableSingleFileAnalyzer>
+    </PropertyGroup>
+
+    <!-- RunAOTCompilation is deliberately left unset: setting it to false also switches off native linking, so
+         SkiaSharp and HarfBuzz would be dropped from the bundle. Opt in with `-p:RunAOTCompilation=true`. -->
+    <PropertyGroup Condition="'$(RunAOTCompilation)' == 'true'">
+        <WasmStripILAfterAOT>true</WasmStripILAfterAOT>
     </PropertyGroup>
 
     <ItemGroup>

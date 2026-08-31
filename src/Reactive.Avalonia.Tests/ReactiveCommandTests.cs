@@ -1,3 +1,4 @@
+using System.Reactive.Disposables.Fluent;
 using System.Windows.Input;
 
 using Microsoft.Reactive.Testing;
@@ -47,6 +48,20 @@ public class ReactiveCommandTests : ReactiveTestBase
         subscription.Dispose();
 
         Assert.That(unsubscribed, Is.True);
+    }
+
+    [Test]
+    public void ExecuteRunsWithABareSubscribe()
+    {
+        // Kicking a command off and tying the handle to a lifetime is an ordinary thing to write, so the
+        // parameterless Subscribe has to work — and the handle has to remain a cancellation handle.
+        var executed = 0;
+        using var disposables = new CompositeDisposable();
+        using var command = ReactiveCommand.Create(() => executed++);
+
+        command.Execute().Subscribe().DisposeWith(disposables);
+
+        Assert.That(executed, Is.EqualTo(1));
     }
 
     [Test]

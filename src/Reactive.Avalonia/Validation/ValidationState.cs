@@ -8,6 +8,16 @@ namespace Reactive.Avalonia;
 public sealed record ValidationState(bool IsValid, IReadOnlyList<string> Messages)
 {
     /// <summary>
+    /// Initializes a new instance of the <see cref="ValidationState"/> class carrying a single message.
+    /// </summary>
+    /// <param name="isValid">Whether the rule is currently satisfied.</param>
+    /// <param name="message">The message to show.</param>
+    public ValidationState(bool isValid, string message)
+        : this(isValid, [message])
+    {
+    }
+
+    /// <summary>
     /// The state of a rule that is satisfied.
     /// </summary>
     public static readonly ValidationState Valid = new(true, []);
