@@ -7,7 +7,6 @@
   </Folder>
   <Project Path="Reactive.Avalonia.Benchmark/Reactive.Avalonia.Benchmark.csproj" />
   <Project Path="Reactive.Avalonia.IntegrationTests/Reactive.Avalonia.IntegrationTests.csproj" />
-  <Project Path="Reactive.Avalonia.Sample/Reactive.Avalonia.Sample.csproj" />
   <Project Path="Reactive.Avalonia.Tests/Reactive.Avalonia.Tests.csproj" />
   <Project Path="Reactive.Avalonia/Reactive.Avalonia.csproj" />
 </Solution>

@@ -8,14 +8,14 @@ public class InteractionViewModel : TabItemViewModelBase
 {
     public InteractionViewModel()
     {
-        SelectFolderCommand = ReactiveCommand.CreateFromTask(SelectFolderExecuteAsync);
+        SelectFileCommand = ReactiveCommand.CreateFromTask(SelectFileExecuteAsync);
     }
 
-    public Interaction<Unit, string?> OpenFolderInteraction { get; } = new();
+    public Interaction<Unit, string?> OpenFileInteraction { get; } = new();
 
-    public ReactiveCommand<Unit, Unit> SelectFolderCommand { get; }
+    public ReactiveCommand<Unit, Unit> SelectFileCommand { get; }
 
-    public string SelectedFolder
+    public string SelectedFile
     {
         get;
         private set => RaiseAndSetIfChanged(ref field, value);
@@ -23,8 +23,8 @@ public class InteractionViewModel : TabItemViewModelBase
 
     public override string Title => "Interaction";
 
-    private async Task SelectFolderExecuteAsync()
+    private async Task SelectFileExecuteAsync()
     {
-        SelectedFolder = await OpenFolderInteraction.Handle(Unit.Default) ?? string.Empty;
+        SelectedFile = await OpenFileInteraction.Handle(Unit.Default) ?? string.Empty;
     }
 }

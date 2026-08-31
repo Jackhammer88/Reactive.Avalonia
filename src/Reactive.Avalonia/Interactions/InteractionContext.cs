@@ -1,3 +1,7 @@
+// Derived from ReactiveUI 23.2.28 (InteractionContext).
+// Copyright (c) .NET Foundation and Contributors. Licensed under the MIT license.
+// See THIRD-PARTY-NOTICES.md in the repository root.
+
 namespace Reactive.Avalonia;
 
 /// <summary>

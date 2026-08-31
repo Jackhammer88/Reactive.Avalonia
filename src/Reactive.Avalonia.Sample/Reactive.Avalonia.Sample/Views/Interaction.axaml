@@ -10,11 +10,12 @@
     <Grid ColumnDefinitions="*,Auto" VerticalAlignment="Center" RowDefinitions="Auto" ColumnSpacing="8" Margin="4 8">
         <TextBox Grid.Column="0"
                  IsReadOnly="True"
-                 Text="{Binding SelectedFolder}"
+                 Text="{Binding SelectedFile}"
+                 PlaceholderText="Select a file"
                  HorizontalAlignment="Stretch" />
 
         <Button Grid.Column="1"
-                Content="Select folder"
-                Command="{Binding SelectFolderCommand}" />
+                Content="Select..."
+                Command="{Binding SelectFileCommand}" />
     </Grid>
 </UserControl>

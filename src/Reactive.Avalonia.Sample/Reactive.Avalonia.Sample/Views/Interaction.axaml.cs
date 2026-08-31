@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Reactive;
 using System.Reactive.Disposables.Fluent;
 using System.Threading.Tasks;
@@ -22,13 +23,13 @@ public partial class Interaction : ReactiveView<InteractionViewModel>
             if (Design.IsDesignMode || ViewModel is null)
                 return;
 
-            ViewModel.OpenFolderInteraction
-                .RegisterHandler(OnOpenFolderAsync)
+            ViewModel.OpenFileInteraction
+                .RegisterHandler(OnOpenFileAsync)
                 .DisposeWith(disposables);
         });
     }
 
-    private async Task OnOpenFolderAsync(InteractionContext<Unit, string?> context)
+    private async Task OnOpenFileAsync(InteractionContext<Unit, string?> context)
     {
         if (TopLevel.GetTopLevel(this) is not { } topLevel)
         {
@@ -36,11 +37,16 @@ public partial class Interaction : ReactiveView<InteractionViewModel>
             return;
         }
 
-        var result = await topLevel.StorageProvider.OpenFolderPickerAsync(new()
+        var result = await topLevel.StorageProvider.OpenFilePickerAsync(new()
         {
-            Title = "Select Folder",
+            Title = "Select a file",
+            AllowMultiple = false,
         });
 
-        context.SetOutput(result.Count > 0 ? result[0].TryGetLocalPath() : null);
+        var file = result.FirstOrDefault();
+
+        context.SetOutput(file is null
+            ? null
+            : file.TryGetLocalPath() ?? file.Name);
     }
 }

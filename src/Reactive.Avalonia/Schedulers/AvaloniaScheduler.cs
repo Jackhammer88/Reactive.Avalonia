@@ -1,3 +1,7 @@
+// Ported from ReactiveUI.Avalonia 11.4.13 (AvaloniaScheduler).
+// Copyright (c) 2019-2026 ReactiveUI and Avalonia Teams, and Contributors. Licensed under the MIT license.
+// See THIRD-PARTY-NOTICES.md in the repository root.
+
 using System.Threading;
 
 using Avalonia.Threading;
