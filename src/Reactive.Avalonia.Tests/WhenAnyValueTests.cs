@@ -251,6 +251,35 @@ public class WhenAnyValueTests : ReactiveTestBase
     }
 
     [Test]
+    public void RaisesWhenALambdaCastDoesNotHold()
+    {
+        // A cast written inside the lambda is stripped when the chain is parsed, so it is only tested at
+        // runtime. Reporting a default here would look exactly like a real value.
+        var fixture = new BoxedFixture { Boxed = 42 };
+        Exception? caught = null;
+
+        fixture.WhenAnyValue(x => (string)x.Boxed!).Subscribe(static _ => { }, ex => caught = ex);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(caught, Is.TypeOf<InvalidCastException>());
+            Assert.That(caught!.Message, Does.Contain(nameof(BoxedFixture.Boxed)));
+        });
+    }
+
+    [Test]
+    public void TreatsANullLinkAsTheDefaultValue()
+    {
+        // Null is the one conversion that stays quiet: it is what a chain reports when a link is missing.
+        var host = new HostTestFixture();
+        int? seen = -1;
+
+        host.WhenAnyValue(x => x.Child!.NullableInt).Subscribe(value => seen = value);
+
+        Assert.That(seen, Is.Null);
+    }
+
+    [Test]
     public void RejectsANullSender()
     {
         TestFixture? fixture = null;
@@ -266,6 +295,17 @@ public class WhenAnyValueTests : ReactiveTestBase
         fixture.Source = "Foo";
 
         Assert.That(fixture.Derived, Is.EqualTo("FOO"));
+    }
+
+    private sealed class BoxedFixture : ReactiveObject
+    {
+        private object? _boxed;
+
+        public object? Boxed
+        {
+            get => _boxed;
+            set => this.RaiseAndSetIfChanged(ref _boxed, value);
+        }
     }
 
     private sealed class WhenAnyToPropertyFixture : ReactiveObject

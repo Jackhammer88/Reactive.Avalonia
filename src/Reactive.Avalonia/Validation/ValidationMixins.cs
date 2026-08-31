@@ -44,7 +44,7 @@ public static class ValidationMixins
         Expression<Func<TViewModel, TProperty>> property,
         Func<TProperty, bool> isValid,
         string message)
-        where TViewModel : class, IValidatableViewModel
+        where TViewModel : class, IValidatableViewModel, INotifyPropertyChanged
     {
         ArgumentNullException.ThrowIfNull(isValid);
         ArgumentNullException.ThrowIfNull(message);
@@ -66,7 +66,7 @@ public static class ValidationMixins
         Expression<Func<TViewModel, TProperty>> property,
         Func<TProperty, bool> isValid,
         Func<TProperty, string> message)
-        where TViewModel : class, IValidatableViewModel
+        where TViewModel : class, IValidatableViewModel, INotifyPropertyChanged
     {
         ArgumentNullException.ThrowIfNull(viewModel);
         ArgumentNullException.ThrowIfNull(isValid);
@@ -99,7 +99,7 @@ public static class ValidationMixins
         Expression<Func<TViewModel, TProperty>> property,
         IObservable<bool> isValid,
         string message)
-        where TViewModel : class, IValidatableViewModel
+        where TViewModel : class, IValidatableViewModel, INotifyPropertyChanged
     {
         ArgumentNullException.ThrowIfNull(viewModel);
         ArgumentNullException.ThrowIfNull(isValid);
@@ -138,7 +138,7 @@ public static class ValidationMixins
         this TViewModel viewModel,
         Expression<Func<TViewModel, TProperty>> property,
         IObservable<ValidationState> validationStates)
-        where TViewModel : class, IValidatableViewModel
+        where TViewModel : class, IValidatableViewModel, INotifyPropertyChanged
     {
         ArgumentNullException.ThrowIfNull(viewModel);
         ArgumentNullException.ThrowIfNull(validationStates);
@@ -157,7 +157,7 @@ public static class ValidationMixins
     public static ValidationHelper ValidationRule<TViewModel>(
         this TViewModel viewModel,
         IObservable<ValidationState> validationStates)
-        where TViewModel : class, IValidatableViewModel
+        where TViewModel : class, IValidatableViewModel, INotifyPropertyChanged
     {
         ArgumentNullException.ThrowIfNull(viewModel);
         ArgumentNullException.ThrowIfNull(validationStates);
@@ -177,7 +177,7 @@ public static class ValidationMixins
         this TViewModel viewModel,
         IObservable<bool> isValid,
         string message)
-        where TViewModel : class, IValidatableViewModel
+        where TViewModel : class, IValidatableViewModel, INotifyPropertyChanged
     {
         ArgumentNullException.ThrowIfNull(viewModel);
         ArgumentNullException.ThrowIfNull(isValid);
@@ -193,7 +193,7 @@ public static class ValidationMixins
     /// <param name="viewModel">The view model to observe.</param>
     /// <returns>The current validity, then one value per change.</returns>
     public static IObservable<bool> IsValid<TViewModel>(this TViewModel viewModel)
-        where TViewModel : class, IValidatableViewModel
+        where TViewModel : class, IValidatableViewModel, INotifyPropertyChanged
     {
         ArgumentNullException.ThrowIfNull(viewModel);
         return viewModel.ValidationContext.Valid;

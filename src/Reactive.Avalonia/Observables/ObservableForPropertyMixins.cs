@@ -42,9 +42,19 @@ public static class ObservableForPropertyMixins
         bool beforeChange = false,
         bool skipInitial = true,
         bool isDistinct = true)
-        where TSender : class
+        where TSender : class, INotifyPropertyChanged
     {
         ArgumentNullException.ThrowIfNull(sender);
+
+        // INotifyPropertyChanged is guaranteed by the constraint, but before-change notifications are a
+        // separate interface. Failing here beats handing back a sequence that never ticks.
+        if (beforeChange && sender is not INotifyPropertyChanging)
+        {
+            throw new ArgumentException(
+                $"'{typeof(TSender)}' does not implement INotifyPropertyChanging, so it cannot report values "
+                + "before they change. Drop beforeChange, or implement the interface.",
+                nameof(beforeChange));
+        }
 
         var chain = PropertyChain.Parse(property, nameof(property));
         var propertyName = chain[^1].Name;
@@ -66,7 +76,7 @@ public static class ObservableForPropertyMixins
         return values.Select(value => (IObservedChange<TSender, TValue>)new ObservedChange<TSender, TValue>(
             sender,
             propertyName,
-            value is TValue typed ? typed : default!));
+            PropertyChain.Convert<TValue>(value, propertyName)));
     }
 
     /// <summary>
@@ -89,7 +99,7 @@ public static class ObservableForPropertyMixins
         bool beforeChange = false,
         bool skipInitial = true,
         bool isDistinct = true)
-        where TSender : class
+        where TSender : class, INotifyPropertyChanged
     {
         ArgumentNullException.ThrowIfNull(selector);
         return sender

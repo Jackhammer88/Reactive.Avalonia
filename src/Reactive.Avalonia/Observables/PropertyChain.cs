@@ -124,6 +124,30 @@ internal static class PropertyChain
     }
 
     /// <summary>
+    /// Converts a value read off the chain to the type the lambda promised.
+    /// </summary>
+    /// <typeparam name="TValue">The type the lambda promised.</typeparam>
+    /// <param name="value">The value that was read.</param>
+    /// <param name="propertyName">The property it came from, for the exception message.</param>
+    /// <returns>The typed value.</returns>
+    /// <exception cref="InvalidCastException">
+    /// The value is of some other type, which means a cast written inside the lambda does not hold at runtime.
+    /// </exception>
+    /// <remarks>
+    /// Null is converted rather than rejected: it is what a chain reports when a link in the middle is null,
+    /// and for a value type the only thing an absent value can be is its default. Anything else is a bug, and
+    /// is raised rather than quietly replaced with a default that would look like real data.
+    /// </remarks>
+    public static TValue Convert<TValue>(object? value, string propertyName) => value switch
+    {
+        TValue typed => typed,
+        null => default!,
+        _ => throw new InvalidCastException(
+            $"Property '{propertyName}' produced a value of type '{value.GetType()}', but the expression "
+            + $"promised '{typeof(TValue)}'."),
+    };
+
+    /// <summary>
     /// Strips the conversions the compiler inserts when the lambda's return type is wider than the property's.
     /// </summary>
     /// <param name="node">The expression node to unwrap.</param>

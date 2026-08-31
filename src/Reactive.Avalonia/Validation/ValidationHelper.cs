@@ -8,10 +8,11 @@ namespace Reactive.Avalonia;
 /// single field) or to remove the rule later. Otherwise the return value can be ignored — the rule stays
 /// registered for the lifetime of the <see cref="ValidationContext"/>.
 /// </remarks>
-public sealed class ValidationHelper : IDisposable
+public sealed class ValidationHelper : ReactiveObject, IDisposable
 {
     private readonly ObservableValidation _component;
     private readonly IDisposable _registration;
+    private readonly IDisposable _notifications;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ValidationHelper"/> class.
@@ -22,6 +23,13 @@ public sealed class ValidationHelper : IDisposable
     {
         _component = component;
         _registration = registration;
+
+        // Without these, binding to Rule.Message would show the first message and then never move.
+        _notifications = component.ValidationStatusChange.Subscribe(_ =>
+        {
+            RaisePropertyChanged(nameof(IsValid));
+            RaisePropertyChanged(nameof(Message));
+        });
     }
 
     /// <summary>
@@ -45,6 +53,7 @@ public sealed class ValidationHelper : IDisposable
     /// </summary>
     public void Dispose()
     {
+        _notifications.Dispose();
         _registration.Dispose();
         _component.Dispose();
     }

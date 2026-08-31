@@ -126,6 +126,19 @@ public class ObservableForPropertyTests : ReactiveTestBase
     }
 
     [Test]
+    public void RejectsBeforeChangeOnATypeThatCannotReportIt()
+    {
+        // The constraint can demand INotifyPropertyChanged but not also INotifyPropertyChanging, so this case
+        // has to fail at the call rather than hand back a sequence that never ticks.
+        var fixture = new ChangedOnlyFixture();
+
+        var exception = Assert.Throws<ArgumentException>(() =>
+            fixture.ObservableForProperty(x => x.Value, beforeChange: true).Subscribe());
+
+        Assert.That(exception!.Message, Does.Contain("INotifyPropertyChanging"));
+    }
+
+    [Test]
     public void RejectsANullSelector()
     {
         var fixture = new TestFixture();

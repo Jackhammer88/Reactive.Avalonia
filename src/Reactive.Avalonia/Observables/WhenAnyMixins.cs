@@ -15,6 +15,13 @@ namespace Reactive.Avalonia;
 /// The lambdas are read, never compiled: nothing here calls <see cref="Expression{TDelegate}.Compile()"/>, so
 /// these methods work under NativeAOT.
 /// </para>
+/// <para>
+/// The object at the root of the chain must implement <see cref="INotifyPropertyChanged"/>. Without it there is
+/// nothing to observe, and the sequence would produce one value and then sit silent forever — so this is a
+/// compile error rather than a subscription that quietly stops working. Links in the middle of a chain are not
+/// constrained: a plain object there is read once each time its owner hands out a new one, which is well
+/// defined.
+/// </para>
 /// </remarks>
 public static class WhenAnyMixins
 {
@@ -36,7 +43,7 @@ public static class WhenAnyMixins
     public static IObservable<T1> WhenAnyValue<TSender, T1>(
         this TSender sender,
         Expression<Func<TSender, T1>> property1)
-        where TSender : class
+        where TSender : class, INotifyPropertyChanged
     {
         ArgumentNullException.ThrowIfNull(sender);
         return Observe(sender, property1, nameof(property1));
@@ -98,7 +105,7 @@ public static class WhenAnyMixins
         Expression<Func<TSender, T1>> property1,
         Expression<Func<TSender, T2>> property2,
         Func<T1, T2, TRet> selector)
-        where TSender : class
+        where TSender : class, INotifyPropertyChanged
     {
         ArgumentNullException.ThrowIfNull(sender);
         ArgumentNullException.ThrowIfNull(selector);
@@ -128,7 +135,7 @@ public static class WhenAnyMixins
         Expression<Func<TSender, T2>> property2,
         Expression<Func<TSender, T3>> property3,
         Func<T1, T2, T3, TRet> selector)
-        where TSender : class
+        where TSender : class, INotifyPropertyChanged
     {
         ArgumentNullException.ThrowIfNull(sender);
         ArgumentNullException.ThrowIfNull(selector);
@@ -162,7 +169,7 @@ public static class WhenAnyMixins
         Expression<Func<TSender, T3>> property3,
         Expression<Func<TSender, T4>> property4,
         Func<T1, T2, T3, T4, TRet> selector)
-        where TSender : class
+        where TSender : class, INotifyPropertyChanged
     {
         ArgumentNullException.ThrowIfNull(sender);
         ArgumentNullException.ThrowIfNull(selector);
@@ -200,7 +207,7 @@ public static class WhenAnyMixins
         Expression<Func<TSender, T4>> property4,
         Expression<Func<TSender, T5>> property5,
         Func<T1, T2, T3, T4, T5, TRet> selector)
-        where TSender : class
+        where TSender : class, INotifyPropertyChanged
     {
         ArgumentNullException.ThrowIfNull(sender);
         ArgumentNullException.ThrowIfNull(selector);
@@ -242,7 +249,7 @@ public static class WhenAnyMixins
         Expression<Func<TSender, T5>> property5,
         Expression<Func<TSender, T6>> property6,
         Func<T1, T2, T3, T4, T5, T6, TRet> selector)
-        where TSender : class
+        where TSender : class, INotifyPropertyChanged
     {
         ArgumentNullException.ThrowIfNull(sender);
         ArgumentNullException.ThrowIfNull(selector);
@@ -288,7 +295,7 @@ public static class WhenAnyMixins
         Expression<Func<TSender, T6>> property6,
         Expression<Func<TSender, T7>> property7,
         Func<T1, T2, T3, T4, T5, T6, T7, TRet> selector)
-        where TSender : class
+        where TSender : class, INotifyPropertyChanged
     {
         ArgumentNullException.ThrowIfNull(sender);
         ArgumentNullException.ThrowIfNull(selector);
@@ -338,7 +345,7 @@ public static class WhenAnyMixins
         Expression<Func<TSender, T7>> property7,
         Expression<Func<TSender, T8>> property8,
         Func<T1, T2, T3, T4, T5, T6, T7, T8, TRet> selector)
-        where TSender : class
+        where TSender : class, INotifyPropertyChanged
     {
         ArgumentNullException.ThrowIfNull(sender);
         ArgumentNullException.ThrowIfNull(selector);
@@ -368,7 +375,7 @@ public static class WhenAnyMixins
         this TSender sender,
         Expression<Func<TSender, T1>> property1,
         Expression<Func<TSender, T2>> property2)
-        where TSender : class
+        where TSender : class, INotifyPropertyChanged
     {
         ArgumentNullException.ThrowIfNull(sender);
         return Observable.CombineLatest(
@@ -394,7 +401,7 @@ public static class WhenAnyMixins
         Expression<Func<TSender, T1>> property1,
         Expression<Func<TSender, T2>> property2,
         Expression<Func<TSender, T3>> property3)
-        where TSender : class
+        where TSender : class, INotifyPropertyChanged
     {
         ArgumentNullException.ThrowIfNull(sender);
         return Observable.CombineLatest(
@@ -424,7 +431,7 @@ public static class WhenAnyMixins
         Expression<Func<TSender, T2>> property2,
         Expression<Func<TSender, T3>> property3,
         Expression<Func<TSender, T4>> property4)
-        where TSender : class
+        where TSender : class, INotifyPropertyChanged
     {
         ArgumentNullException.ThrowIfNull(sender);
         return Observable.CombineLatest(
@@ -458,7 +465,7 @@ public static class WhenAnyMixins
         Expression<Func<TSender, T3>> property3,
         Expression<Func<TSender, T4>> property4,
         Expression<Func<TSender, T5>> property5)
-        where TSender : class
+        where TSender : class, INotifyPropertyChanged
     {
         ArgumentNullException.ThrowIfNull(sender);
         return Observable.CombineLatest(
@@ -483,8 +490,13 @@ public static class WhenAnyMixins
         TSender sender,
         Expression<Func<TSender, TValue>> property,
         string parameterName)
-        where TSender : class =>
-        PropertyChain
-            .Observe(sender, PropertyChain.Parse(property, parameterName))
-            .Select(static value => value is TValue typed ? typed : default!);
+        where TSender : class, INotifyPropertyChanged
+    {
+        var chain = PropertyChain.Parse(property, parameterName);
+        var propertyName = chain[^1].Name;
+
+        return PropertyChain
+            .Observe(sender, chain)
+            .Select(value => PropertyChain.Convert<TValue>(value, propertyName));
+    }
 }

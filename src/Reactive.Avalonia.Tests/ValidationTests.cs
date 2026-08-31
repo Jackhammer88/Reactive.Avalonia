@@ -187,6 +187,77 @@ public class ValidationTests : ReactiveTestBase
     }
 
     [Test]
+    public void TheContextRaisesChangeNotificationsForIsValid()
+    {
+        using var viewModel = new PersonViewModel();
+        var raised = new List<string?>();
+        viewModel.ValidationContext.Changed.Subscribe(args => raised.Add(args.PropertyName));
+
+        viewModel.Name = "Alice";
+
+        Assert.That(raised, Does.Contain(nameof(ValidationContext.IsValid)));
+    }
+
+    [Test]
+    public void TheContextRaisesChangeNotificationsForText()
+    {
+        using var viewModel = new PersonViewModel();
+        var raised = new List<string?>();
+        viewModel.ValidationContext.Changed.Subscribe(args => raised.Add(args.PropertyName));
+
+        viewModel.Name = "Alice";
+
+        Assert.That(raised, Does.Contain(nameof(ValidationContext.Text)));
+    }
+
+    [Test]
+    public void TheContextIsObservableWithWhenAnyValue()
+    {
+        // Code carried over from ReactiveUI observes the context directly. Before the context raised
+        // notifications this produced one value and then sat silent, which looked like nothing was wrong.
+        using var viewModel = new PersonViewModel();
+        var seen = new List<bool>();
+
+        using (viewModel.ValidationContext.WhenAnyValue(x => x.IsValid).Subscribe(seen.Add))
+        {
+            viewModel.Name = "Alice";
+            viewModel.Name = string.Empty;
+        }
+
+        Assert.That(seen, Is.EqualTo(new[] { false, true, false }));
+    }
+
+    [Test]
+    public void TheContextDoesNotRaiseWhenNothingChanged()
+    {
+        using var viewModel = new PersonViewModel();
+        viewModel.Name = "Alice";
+
+        var raised = new List<string?>();
+        viewModel.ValidationContext.Changed.Subscribe(args => raised.Add(args.PropertyName));
+
+        viewModel.Name = "Bob";
+
+        Assert.That(raised, Is.Empty, "Both names are valid, so neither IsValid nor Text moved.");
+    }
+
+    [Test]
+    public void AHelperRaisesChangeNotifications()
+    {
+        using var viewModel = new RemovableRuleViewModel();
+        var raised = new List<string?>();
+        viewModel.Rule.Changed.Subscribe(args => raised.Add(args.PropertyName));
+
+        viewModel.Value = "set";
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(raised, Does.Contain(nameof(ValidationHelper.IsValid)));
+            Assert.That(raised, Does.Contain(nameof(ValidationHelper.Message)));
+        });
+    }
+
+    [Test]
     public void IsValidDrivesACommandsCanExecute()
     {
         using var viewModel = new PersonViewModel();

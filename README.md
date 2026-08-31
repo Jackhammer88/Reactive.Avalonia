@@ -116,6 +116,9 @@ var password = this.WhenAnyValue(
 this.ValidationRule(x => x.NewPassword, password);
 ```
 
+`ValidationContext` raises change notifications for `IsValid` and `Text`, so both can be observed with
+`WhenAnyValue` or bound to from XAML, as well as reached through `this.IsValid()`.
+
 ### Views and activation
 
 ```csharp
@@ -205,6 +208,12 @@ Use Avalonia's compiled XAML bindings and whichever DI container you already hav
 - `ReactiveObject` has no `ThrownExceptions`: an exception thrown by a `Changed` subscriber propagates out of
   the assignment that caused it rather than being routed to a side channel.
 - Schedulers live on `RxSchedulers` and default to the Avalonia dispatcher without any initialisation call.
+- `WhenAnyValue`, `ObservableForProperty` and `WhenAnyObservable` require the object at the root of the chain
+  to implement `INotifyPropertyChanged`. Observing a plain object compiles in ReactiveUI and then produces one
+  value and nothing ever again; here it is a compile error. Links in the middle of a chain are unconstrained —
+  a plain object there is re-read each time its owner replaces it, which is well defined.
+- A cast written inside a property lambda that does not hold at runtime raises `InvalidCastException` instead of
+  quietly yielding a default that reads like real data.
 - `net10.0` only, with no polyfills.
 
 ## Building

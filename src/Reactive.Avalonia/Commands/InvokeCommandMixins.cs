@@ -85,7 +85,7 @@ public static class InvokeCommandMixins
         this IObservable<T> source,
         TTarget target,
         Expression<Func<TTarget, ICommand?>> commandProperty)
-        where TTarget : class
+        where TTarget : class, INotifyPropertyChanged
     {
         ArgumentNullException.ThrowIfNull(source);
         ArgumentNullException.ThrowIfNull(target);

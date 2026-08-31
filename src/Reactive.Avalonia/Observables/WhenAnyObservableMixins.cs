@@ -23,7 +23,7 @@ public static class WhenAnyObservableMixins
     public static IObservable<TRet> WhenAnyObservable<TSender, TRet>(
         this TSender sender,
         Expression<Func<TSender, IObservable<TRet>>> observable1)
-        where TSender : class =>
+        where TSender : class, INotifyPropertyChanged =>
         sender.WhenAnyValue(observable1).Select(Coalesce).Switch();
 
     /// <summary>
@@ -39,7 +39,7 @@ public static class WhenAnyObservableMixins
         this TSender sender,
         Expression<Func<TSender, IObservable<TRet>>> observable1,
         Expression<Func<TSender, IObservable<TRet>>> observable2)
-        where TSender : class =>
+        where TSender : class, INotifyPropertyChanged =>
         Observable.Merge(
             sender.WhenAnyObservable(observable1),
             sender.WhenAnyObservable(observable2));
@@ -59,7 +59,7 @@ public static class WhenAnyObservableMixins
         Expression<Func<TSender, IObservable<TRet>>> observable1,
         Expression<Func<TSender, IObservable<TRet>>> observable2,
         Expression<Func<TSender, IObservable<TRet>>> observable3)
-        where TSender : class =>
+        where TSender : class, INotifyPropertyChanged =>
         Observable.Merge(
             sender.WhenAnyObservable(observable1),
             sender.WhenAnyObservable(observable2),

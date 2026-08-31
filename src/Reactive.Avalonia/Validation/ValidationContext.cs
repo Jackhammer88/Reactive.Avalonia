@@ -6,9 +6,11 @@ namespace Reactive.Avalonia;
 /// The set of validation rules attached to a view model, and their combined outcome.
 /// </summary>
 /// <remarks>
-/// Rules are added with the <see cref="ValidationMixins"/> extension methods rather than by hand.
+/// Rules are added with the <see cref="ValidationMixins"/> extension methods rather than by hand. The context
+/// raises change notifications for <see cref="IsValid"/> and <see cref="Text"/>, so both can be observed with
+/// <c>WhenAnyValue</c> or bound to directly.
 /// </remarks>
-public sealed class ValidationContext : IDisposable
+public sealed class ValidationContext : ReactiveObject, IDisposable
 {
     private readonly List<IValidationComponent> _components = [];
     private readonly Dictionary<IValidationComponent, IDisposable> _subscriptions = [];
@@ -172,6 +174,34 @@ public sealed class ValidationContext : IDisposable
             }
         }
 
-        _status.OnNext(new ValidationState(valid, messages ?? (IReadOnlyList<string>)[]));
+        var next = new ValidationState(valid, messages ?? (IReadOnlyList<string>)[]);
+        var previous = _status.Value;
+
+        // Raised around the push so that an observer woken by ValidationStatusChange already sees the new
+        // IsValid and Text, and so that a binding to either of them is not left showing a stale value.
+        var validityChanged = previous.IsValid != next.IsValid;
+        var textChanged = !previous.Messages.SequenceEqual(next.Messages, StringComparer.Ordinal);
+
+        if (validityChanged)
+        {
+            RaisePropertyChanging(nameof(IsValid));
+        }
+
+        if (textChanged)
+        {
+            RaisePropertyChanging(nameof(Text));
+        }
+
+        _status.OnNext(next);
+
+        if (validityChanged)
+        {
+            RaisePropertyChanged(nameof(IsValid));
+        }
+
+        if (textChanged)
+        {
+            RaisePropertyChanged(nameof(Text));
+        }
     }
 }
