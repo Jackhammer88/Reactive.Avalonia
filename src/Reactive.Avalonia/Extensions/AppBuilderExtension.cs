@@ -46,9 +46,7 @@ public static class AppBuilderExtension
             RxSchedulers.TaskpoolScheduler = options.TaskpoolScheduler;
 
             if (options.DefaultExceptionHandler is not null)
-            {
                 RxSchedulers.DefaultExceptionHandler = options.DefaultExceptionHandler;
-            }
         });
     }
 }

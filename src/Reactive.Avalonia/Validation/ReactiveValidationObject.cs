@@ -80,9 +80,7 @@ public class ReactiveValidationObject : ReactiveObject, IValidatableViewModel, I
     protected virtual void Dispose(bool disposing)
     {
         if (_disposed || !disposing)
-        {
             return;
-        }
 
         _disposed = true;
         _subscription.Dispose();

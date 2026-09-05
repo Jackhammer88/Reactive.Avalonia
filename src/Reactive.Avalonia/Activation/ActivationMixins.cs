@@ -35,9 +35,13 @@ public static class ActivationMixins
     /// }
     /// </code>
     /// </example>
-    public static IDisposable WhenActivated(this IActivatableView view, Action<CompositeDisposable> block)
+    public static IDisposable WhenActivated(
+        this IActivatableView view,
+        Action<CompositeDisposable> block)
     {
+        ArgumentNullException.ThrowIfNull(view);
         ArgumentNullException.ThrowIfNull(block);
+
         return view.WhenActivated(() =>
         {
             var disposables = new CompositeDisposable();
@@ -53,7 +57,8 @@ public static class ActivationMixins
     /// <param name="view">The view to track.</param>
     /// <param name="block">Produces the subscriptions that live for as long as the view is shown.</param>
     /// <returns>A token that stops tracking the view when disposed.</returns>
-    public static IDisposable WhenActivated(this IActivatableView view, Func<IEnumerable<IDisposable>> block)
+    public static IDisposable WhenActivated(
+        this IActivatableView view, Func<IEnumerable<IDisposable>> block)
     {
         ArgumentNullException.ThrowIfNull(view);
         ArgumentNullException.ThrowIfNull(block);
@@ -95,9 +100,13 @@ public static class ActivationMixins
     /// <c>DisposeWith</c>.
     /// </param>
     /// <returns>A token that unregisters the block when disposed.</returns>
-    public static IDisposable WhenActivated(this IActivatableViewModel viewModel, Action<CompositeDisposable> block)
+    public static IDisposable WhenActivated(
+        this IActivatableViewModel viewModel,
+        Action<CompositeDisposable> block)
     {
+        ArgumentNullException.ThrowIfNull(viewModel);
         ArgumentNullException.ThrowIfNull(block);
+
         return viewModel.WhenActivated(() =>
         {
             var disposables = new CompositeDisposable();
@@ -130,10 +139,11 @@ public static class ActivationMixins
     {
         var handle = new SerialDisposable();
 
-        var subscription = ObserveViewModel(view).Subscribe(viewModel =>
-            handle.Disposable = viewModel is IActivatableViewModel activatable
-                ? activatable.Activator.Activate()
-                : null);
+        var subscription = ObserveViewModel(view)
+            .Subscribe(viewModel =>
+                handle.Disposable = viewModel is IActivatableViewModel activatable
+                    ? activatable.Activator.Activate()
+                    : null);
 
         return new CompositeDisposable(subscription, handle);
     }
@@ -143,8 +153,11 @@ public static class ActivationMixins
     /// </summary>
     /// <param name="view">The view to observe.</param>
     /// <returns>The current view model, then each replacement.</returns>
-    private static IObservable<object?> ObserveViewModel(IViewFor view) =>
-        Observable.Create<object?>(observer =>
+    private static IObservable<object?> ObserveViewModel(IViewFor view)
+    {
+        ArgumentNullException.ThrowIfNull(view);
+
+        return Observable.Create<object?>(observer =>
         {
             if (view is not INotifyPropertyChanged notifier)
             {
@@ -168,4 +181,5 @@ public static class ActivationMixins
                 (notifier, handler),
                 static state => state.notifier.PropertyChanged -= state.handler);
         });
+    }
 }

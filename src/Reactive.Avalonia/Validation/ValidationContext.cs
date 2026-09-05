@@ -80,14 +80,10 @@ public sealed class ValidationContext : ReactiveObject, IDisposable
         lock (_gate)
         {
             if (!_components.Remove(component))
-            {
                 return;
-            }
 
             if (_subscriptions.Remove(component, out var subscription))
-            {
                 subscription.Dispose();
-            }
         }
 
         Recompute();
@@ -112,9 +108,7 @@ public sealed class ValidationContext : ReactiveObject, IDisposable
             {
                 var status = component.ValidationStatus;
                 if (status.IsValid)
-                {
                     continue;
-                }
 
                 if (!string.IsNullOrEmpty(propertyName) &&
                     !component.PropertyNames.Contains(propertyName, StringComparer.Ordinal))
@@ -164,10 +158,9 @@ public sealed class ValidationContext : ReactiveObject, IDisposable
             foreach (var component in _components)
             {
                 var status = component.ValidationStatus;
+
                 if (status.IsValid)
-                {
                     continue;
-                }
 
                 valid = false;
                 (messages ??= []).AddRange(status.Messages);
@@ -183,25 +176,17 @@ public sealed class ValidationContext : ReactiveObject, IDisposable
         var textChanged = !previous.Messages.SequenceEqual(next.Messages, StringComparer.Ordinal);
 
         if (validityChanged)
-        {
             RaisePropertyChanging(nameof(IsValid));
-        }
 
         if (textChanged)
-        {
             RaisePropertyChanging(nameof(Text));
-        }
 
         _status.OnNext(next);
 
         if (validityChanged)
-        {
             RaisePropertyChanged(nameof(IsValid));
-        }
 
         if (textChanged)
-        {
             RaisePropertyChanged(nameof(Text));
-        }
     }
 }

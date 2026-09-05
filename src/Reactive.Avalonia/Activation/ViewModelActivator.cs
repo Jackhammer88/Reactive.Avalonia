@@ -107,9 +107,7 @@ public sealed class ViewModelActivator : IDisposable
 
             // Registering while already active should not wait for the next activation to take effect.
             if (_refCount > 0)
-            {
                 AddRange(_handle, block());
-            }
         }
 
         return Disposable.Create(

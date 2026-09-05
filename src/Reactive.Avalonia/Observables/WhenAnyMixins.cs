@@ -46,6 +46,7 @@ public static class WhenAnyMixins
         where TSender : class, INotifyPropertyChanged
     {
         ArgumentNullException.ThrowIfNull(sender);
+
         return Observe(sender, property1, nameof(property1));
     }
 
@@ -109,6 +110,7 @@ public static class WhenAnyMixins
     {
         ArgumentNullException.ThrowIfNull(sender);
         ArgumentNullException.ThrowIfNull(selector);
+
         return Observable.CombineLatest(
             Observe(sender, property1, nameof(property1)),
             Observe(sender, property2, nameof(property2)),
@@ -139,6 +141,7 @@ public static class WhenAnyMixins
     {
         ArgumentNullException.ThrowIfNull(sender);
         ArgumentNullException.ThrowIfNull(selector);
+
         return Observable.CombineLatest(
             Observe(sender, property1, nameof(property1)),
             Observe(sender, property2, nameof(property2)),
@@ -173,6 +176,7 @@ public static class WhenAnyMixins
     {
         ArgumentNullException.ThrowIfNull(sender);
         ArgumentNullException.ThrowIfNull(selector);
+
         return Observable.CombineLatest(
             Observe(sender, property1, nameof(property1)),
             Observe(sender, property2, nameof(property2)),
@@ -211,6 +215,7 @@ public static class WhenAnyMixins
     {
         ArgumentNullException.ThrowIfNull(sender);
         ArgumentNullException.ThrowIfNull(selector);
+
         return Observable.CombineLatest(
             Observe(sender, property1, nameof(property1)),
             Observe(sender, property2, nameof(property2)),
@@ -253,6 +258,7 @@ public static class WhenAnyMixins
     {
         ArgumentNullException.ThrowIfNull(sender);
         ArgumentNullException.ThrowIfNull(selector);
+
         return Observable.CombineLatest(
             Observe(sender, property1, nameof(property1)),
             Observe(sender, property2, nameof(property2)),
@@ -299,6 +305,7 @@ public static class WhenAnyMixins
     {
         ArgumentNullException.ThrowIfNull(sender);
         ArgumentNullException.ThrowIfNull(selector);
+
         return Observable.CombineLatest(
             Observe(sender, property1, nameof(property1)),
             Observe(sender, property2, nameof(property2)),
@@ -349,6 +356,7 @@ public static class WhenAnyMixins
     {
         ArgumentNullException.ThrowIfNull(sender);
         ArgumentNullException.ThrowIfNull(selector);
+
         return Observable.CombineLatest(
             Observe(sender, property1, nameof(property1)),
             Observe(sender, property2, nameof(property2)),
@@ -378,6 +386,7 @@ public static class WhenAnyMixins
         where TSender : class, INotifyPropertyChanged
     {
         ArgumentNullException.ThrowIfNull(sender);
+
         return Observable.CombineLatest(
             Observe(sender, property1, nameof(property1)),
             Observe(sender, property2, nameof(property2)),
@@ -404,6 +413,7 @@ public static class WhenAnyMixins
         where TSender : class, INotifyPropertyChanged
     {
         ArgumentNullException.ThrowIfNull(sender);
+
         return Observable.CombineLatest(
             Observe(sender, property1, nameof(property1)),
             Observe(sender, property2, nameof(property2)),
@@ -434,6 +444,7 @@ public static class WhenAnyMixins
         where TSender : class, INotifyPropertyChanged
     {
         ArgumentNullException.ThrowIfNull(sender);
+
         return Observable.CombineLatest(
             Observe(sender, property1, nameof(property1)),
             Observe(sender, property2, nameof(property2)),
@@ -468,6 +479,7 @@ public static class WhenAnyMixins
         where TSender : class, INotifyPropertyChanged
     {
         ArgumentNullException.ThrowIfNull(sender);
+
         return Observable.CombineLatest(
             Observe(sender, property1, nameof(property1)),
             Observe(sender, property2, nameof(property2)),

@@ -28,6 +28,7 @@ public static class ReactiveCommand
         IScheduler? outputScheduler = null)
     {
         ArgumentNullException.ThrowIfNull(execute);
+
         return new ReactiveCommand<Unit, Unit>(
             _ => Observable.Create<Unit>(observer =>
             {
@@ -52,6 +53,7 @@ public static class ReactiveCommand
         IScheduler? outputScheduler = null)
     {
         ArgumentNullException.ThrowIfNull(execute);
+
         return new ReactiveCommand<TParam, Unit>(
             parameter => Observable.Create<Unit>(observer =>
             {
@@ -76,6 +78,7 @@ public static class ReactiveCommand
         IScheduler? outputScheduler = null)
     {
         ArgumentNullException.ThrowIfNull(execute);
+
         return new ReactiveCommand<Unit, TResult>(
             _ => Observable.Create<TResult>(observer =>
             {
@@ -100,6 +103,7 @@ public static class ReactiveCommand
         IScheduler? outputScheduler = null)
     {
         ArgumentNullException.ThrowIfNull(execute);
+
         return new ReactiveCommand<TParam, TResult>(
             parameter => Observable.Create<TResult>(observer =>
             {
@@ -122,7 +126,9 @@ public static class ReactiveCommand
         IScheduler? outputScheduler = null)
     {
         ArgumentNullException.ThrowIfNull(execute);
-        return new ReactiveCommand<Unit, Unit>(_ => Observable.FromAsync(execute), canExecute, outputScheduler);
+
+        return new ReactiveCommand<Unit, Unit>(_ =>
+            Observable.FromAsync(execute), canExecute, outputScheduler);
     }
 
     /// <summary>Creates a command from a cancellable asynchronous method.</summary>
@@ -136,7 +142,9 @@ public static class ReactiveCommand
         IScheduler? outputScheduler = null)
     {
         ArgumentNullException.ThrowIfNull(execute);
-        return new ReactiveCommand<Unit, Unit>(_ => Observable.FromAsync(execute), canExecute, outputScheduler);
+
+        return new ReactiveCommand<Unit, Unit>(_ =>
+            Observable.FromAsync(execute), canExecute, outputScheduler);
     }
 
     /// <summary>Creates a command from an asynchronous function.</summary>
@@ -151,7 +159,9 @@ public static class ReactiveCommand
         IScheduler? outputScheduler = null)
     {
         ArgumentNullException.ThrowIfNull(execute);
-        return new ReactiveCommand<Unit, TResult>(_ => Observable.FromAsync(execute), canExecute, outputScheduler);
+
+        return new ReactiveCommand<Unit, TResult>(_ =>
+            Observable.FromAsync(execute), canExecute, outputScheduler);
     }
 
     /// <summary>Creates a command from a cancellable asynchronous function.</summary>
@@ -166,7 +176,9 @@ public static class ReactiveCommand
         IScheduler? outputScheduler = null)
     {
         ArgumentNullException.ThrowIfNull(execute);
-        return new ReactiveCommand<Unit, TResult>(_ => Observable.FromAsync(execute), canExecute, outputScheduler);
+
+        return new ReactiveCommand<Unit, TResult>(_ =>
+            Observable.FromAsync(execute), canExecute, outputScheduler);
     }
 
     /// <summary>Creates a command from an asynchronous method taking a parameter.</summary>
@@ -181,6 +193,7 @@ public static class ReactiveCommand
         IScheduler? outputScheduler = null)
     {
         ArgumentNullException.ThrowIfNull(execute);
+
         return new ReactiveCommand<TParam, Unit>(
             parameter => Observable.FromAsync(() => execute(parameter)),
             canExecute,
@@ -199,6 +212,7 @@ public static class ReactiveCommand
         IScheduler? outputScheduler = null)
     {
         ArgumentNullException.ThrowIfNull(execute);
+
         return new ReactiveCommand<TParam, Unit>(
             parameter => Observable.FromAsync(token => execute(parameter, token)),
             canExecute,
@@ -218,6 +232,7 @@ public static class ReactiveCommand
         IScheduler? outputScheduler = null)
     {
         ArgumentNullException.ThrowIfNull(execute);
+
         return new ReactiveCommand<TParam, TResult>(
             parameter => Observable.FromAsync(() => execute(parameter)),
             canExecute,
@@ -237,6 +252,7 @@ public static class ReactiveCommand
         IScheduler? outputScheduler = null)
     {
         ArgumentNullException.ThrowIfNull(execute);
+
         return new ReactiveCommand<TParam, TResult>(
             parameter => Observable.FromAsync(token => execute(parameter, token)),
             canExecute,
@@ -255,6 +271,7 @@ public static class ReactiveCommand
         IScheduler? outputScheduler = null)
     {
         ArgumentNullException.ThrowIfNull(execute);
+
         return new ReactiveCommand<Unit, TResult>(_ => execute(), canExecute, outputScheduler);
     }
 
@@ -271,6 +288,7 @@ public static class ReactiveCommand
         IScheduler? outputScheduler = null)
     {
         ArgumentNullException.ThrowIfNull(execute);
+
         return new ReactiveCommand<TParam, TResult>(execute, canExecute, outputScheduler);
     }
 }

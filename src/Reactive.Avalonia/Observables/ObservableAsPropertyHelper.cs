@@ -39,9 +39,7 @@ public sealed class ObservableAsPropertyHelper<T> : IHandleObservableErrors, IDi
                 value =>
                 {
                     if (EqualityComparer<T>.Default.Equals(_value, value))
-                    {
                         return;
-                    }
 
                     onChanging();
                     _value = value;

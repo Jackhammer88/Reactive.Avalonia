@@ -64,14 +64,10 @@ public static class ObservableForPropertyMixins
         // Skip before dedupe, not after: the value emitted on subscription is by definition equal to the one
         // the first before-change notification reports, and collapsing them first would swallow that change.
         if (skipInitial)
-        {
             values = values.Skip(1);
-        }
 
         if (isDistinct)
-        {
             values = values.DistinctUntilChanged();
-        }
 
         return values.Select(value => (IObservedChange<TSender, TValue>)new ObservedChange<TSender, TValue>(
             sender,

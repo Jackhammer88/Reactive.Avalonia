@@ -34,9 +34,7 @@ internal sealed class ScheduledSubject<T> : ISubject<T>, IDisposable
         _fallback = fallback;
 
         if (fallback is not null)
-        {
             _fallbackSubscription = _subject.ObserveOn(scheduler).Subscribe(fallback);
-        }
     }
 
     /// <inheritdoc/>
@@ -54,9 +52,7 @@ internal sealed class ScheduledSubject<T> : ISubject<T>, IDisposable
         ArgumentNullException.ThrowIfNull(observer);
 
         if (Interlocked.Increment(ref _observerCount) == 1)
-        {
             Interlocked.Exchange(ref _fallbackSubscription, Disposable.Empty).Dispose();
-        }
 
         return new CompositeDisposable(
             _subject.ObserveOn(_scheduler).Subscribe(observer),
@@ -73,12 +69,12 @@ internal sealed class ScheduledSubject<T> : ISubject<T>, IDisposable
     private void ReleaseObserver()
     {
         if (Interlocked.Decrement(ref _observerCount) != 0 || _fallback is null)
-        {
             return;
-        }
 
         Interlocked
-            .Exchange(ref _fallbackSubscription, _subject.ObserveOn(_scheduler).Subscribe(_fallback))
+            .Exchange(
+                ref _fallbackSubscription,
+                _subject.ObserveOn(_scheduler).Subscribe(_fallback))
             .Dispose();
     }
 }

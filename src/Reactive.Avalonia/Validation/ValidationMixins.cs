@@ -48,6 +48,7 @@ public static class ValidationMixins
     {
         ArgumentNullException.ThrowIfNull(isValid);
         ArgumentNullException.ThrowIfNull(message);
+
         return viewModel.ValidationRule(property, isValid, _ => message);
     }
 

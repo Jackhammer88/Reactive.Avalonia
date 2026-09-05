@@ -97,14 +97,10 @@ public class ReactiveObject : IReactiveObject
     public void RaisePropertyChanged([CallerMemberName] string? propertyName = null)
     {
         if (!AreChangeNotificationsEnabled())
-        {
             return;
-        }
 
         if (QueueIfDelayed(isChanging: false, propertyName))
-        {
             return;
-        }
 
         RaiseChangedCore(propertyName);
     }
@@ -113,14 +109,10 @@ public class ReactiveObject : IReactiveObject
     public void RaisePropertyChanging([CallerMemberName] string? propertyName = null)
     {
         if (!AreChangeNotificationsEnabled())
-        {
             return;
-        }
 
         if (QueueIfDelayed(isChanging: true, propertyName))
-        {
             return;
-        }
 
         RaiseChangingCore(propertyName);
     }
@@ -142,9 +134,7 @@ public class ReactiveObject : IReactiveObject
         ArgumentNullException.ThrowIfNull(propertyName);
 
         if (EqualityComparer<T>.Default.Equals(backingField, newValue))
-        {
             return newValue;
-        }
 
         RaisePropertyChanging(propertyName);
         backingField = newValue;
@@ -177,16 +167,12 @@ public class ReactiveObject : IReactiveObject
         lock (_gate)
         {
             if (_delayCount == 0)
-            {
                 return false;
-            }
 
             // Only the first occurrence is kept: subscribers read the current value, so replaying a property
             // twice would deliver the same value twice.
             if (!_delayedNotifications.Contains((isChanging, propertyName)))
-            {
                 _delayedNotifications.Add((isChanging, propertyName));
-            }
 
             return true;
         }
@@ -199,9 +185,7 @@ public class ReactiveObject : IReactiveObject
         lock (_gate)
         {
             if (_delayCount == 0 || --_delayCount > 0)
-            {
                 return;
-            }
 
             queued = [.. _delayedNotifications];
             _delayedNotifications.Clear();
@@ -210,13 +194,9 @@ public class ReactiveObject : IReactiveObject
         foreach (var (isChanging, propertyName) in queued)
         {
             if (isChanging)
-            {
                 RaiseChangingCore(propertyName);
-            }
             else
-            {
                 RaiseChangedCore(propertyName);
-            }
         }
     }
 }

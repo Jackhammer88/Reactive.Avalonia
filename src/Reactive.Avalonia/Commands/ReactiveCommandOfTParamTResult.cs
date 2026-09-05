@@ -156,9 +156,7 @@ public sealed class ReactiveCommand<TParam, TResult> : IReactiveCommand, IObserv
     public void Dispose()
     {
         if (Interlocked.Exchange(ref _disposed, 1) != 0)
-        {
             return;
-        }
 
         _canExecuteSubscription.Dispose();
         _isExecuting.Dispose();
@@ -175,9 +173,7 @@ public sealed class ReactiveCommand<TParam, TResult> : IReactiveCommand, IObserv
     {
         // A parameterless command should not blow up because the XAML happens to pass a CommandParameter.
         if (typeof(TParam) == typeof(Unit))
-        {
             return default!;
-        }
 
         return parameter switch
         {

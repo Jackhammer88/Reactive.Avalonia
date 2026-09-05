@@ -37,9 +37,7 @@ public static class ReactiveObjectExtensions
         ArgumentNullException.ThrowIfNull(propertyName);
 
         if (EqualityComparer<TRet>.Default.Equals(backingField, newValue))
-        {
             return newValue;
-        }
 
         reactiveObject.RaisePropertyChanging(propertyName);
         backingField = newValue;

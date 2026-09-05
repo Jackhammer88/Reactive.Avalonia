@@ -2,8 +2,6 @@
 // Copyright (c) 2019-2026 ReactiveUI and Avalonia Teams, and Contributors. Licensed under the MIT license.
 // See THIRD-PARTY-NOTICES.md in the repository root.
 
-using System.Threading;
-
 using Avalonia.Threading;
 
 namespace Reactive.Avalonia;
@@ -55,9 +53,7 @@ public sealed class AvaloniaScheduler : LocalScheduler
         }
 
         if (!Dispatcher.UIThread.CheckAccess() || _reentrancyGuard >= MaxReentrantSchedules)
-        {
             return Post(state, action);
-        }
 
         try
         {
@@ -79,9 +75,7 @@ public sealed class AvaloniaScheduler : LocalScheduler
             () =>
             {
                 if (!cancellation.Token.IsCancellationRequested)
-                {
                     composite.Add(action(this, state));
-                }
             },
             _priority);
 

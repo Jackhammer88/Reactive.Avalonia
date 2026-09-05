@@ -41,9 +41,7 @@ public sealed class InteractionContext<TInput, TOutput>
     public void SetOutput(TOutput output)
     {
         if (IsHandled)
-        {
             throw new InvalidOperationException("Output has already been set.");
-        }
 
         _output = output;
         IsHandled = true;

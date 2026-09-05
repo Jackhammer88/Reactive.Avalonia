@@ -214,9 +214,7 @@ internal static class PropertyChain
             PropertyChangingEventHandler handler = (_, e) =>
             {
                 if (Matches(e.PropertyName, link.Name))
-                {
                     observer.OnNext(link.GetValue(owner));
-                }
             };
 
             notifier.PropertyChanging += handler;
